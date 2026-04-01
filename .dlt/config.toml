@@ -1,0 +1,7 @@
+[runtime]
+log_level="WARNING"
+dlthub_telemetry = true
+
+[destination.iceberg]
+catalog_type = "rest"
+

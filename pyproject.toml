@@ -1,0 +1,13 @@
+[project]
+name = "github-claude-code-issues"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "dlt>=1.23.0",
+    "dlthub>=0.9.1",
+    "pyarrow>=23.0.1",
+    "pyiceberg>=0.11.1",
+    "tower>=0.1.0",
+]

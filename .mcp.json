@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "tower-mcp": {
+      "type": "stdio",
+      "command": "uvx",
+      "args": [
+        "tower",
+        "mcp-server"
+      ],
+      "env": {}
+    }
+  }
+}
