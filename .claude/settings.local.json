@@ -1,8 +1,0 @@
-{
-  "permissions": {
-    "allow": [
-      "Bash(uv add:*)",
-      "mcp__dlt-workspace-mcp__search_dlthub_sources"
-    ]
-  }
-}
