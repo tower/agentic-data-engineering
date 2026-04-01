@@ -12,7 +12,7 @@ This repo closes these gaps and boost data engineering productivity along every 
 ## Prerequisites
 1. `uv` and `duckdb` installed on your machine (see [uv](https://docs.astral.sh/uv/getting-started/installation/), [duckdb](https://duckdb.org/install/?platform=macos&environment=cli&version=lts))
 2. Access to any AI coding agent that supports the [Agent Skills Open Format](https://agentskills.io/home), e.g. Claude, Cursor, Codex, AntiGravity, etc.
-3. A Tower account [free signup](https://app.tower.dev/)
+3. Tower installed globally (`uvx install tower`) and a Tower account [free signup](https://app.tower.dev/)
 
 ## TODOs:
 - [ ] Do we have a free tier for the Hackathon?
@@ -23,11 +23,13 @@ This repo closes these gaps and boost data engineering productivity along every 
 We're putting ourselves in the shoes of a data engineer: Our goal is to build on top of an existing data pipeline and create a small data app that notifies us when bugs are being reported through our ticketing system.
 1. Clone this repository
 2. Checkout the `start-here` branch (`git checkout start-here`)
-2. Install all dependencies: `uv sync`
-3. Ask claude to run the pipeline `claude "Run the pipeline"`. Some of the issues that we'll likely run into are:
+3. Install all dependencies: `uv sync`
+4. Make sure you're logged into tower with the right team: `tower teams list`
+5. Ask claude to run the pipeline `claude "Run the pipeline"`. Some of the issues that we'll likely run into are:
 - Unauthenticated API calls lead to rate limits -> Need a runtime with credentials
 - Local DuckDB destination makes it hard to activate loaded data -> Need a remote destination 
 - Lack of context makes the pipeline tough to extend -> Need richer context
-4. Checkout the `main` branch and tell claude to run the pipeline again. The `main` branch comes with a full-blown harness of skills, rules, and hooks for AI coding agents to actually make our lives as data engineers easier
+6. Checkout the `main` branch and tell claude to run the pipeline again. The `main` branch comes with a full-blown harness of skills, rules, and hooks for AI coding agents to actually make our lives as data engineers easier
+7. Tell claude that you now want build on top of the pipeline to receive alersts in discord whenever a bug ticket gets filed.
 
 

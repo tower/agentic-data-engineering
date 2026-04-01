@@ -28,6 +28,16 @@ User asks to build a data app
 └─────────────────────────────────────────────────┘
          │
          ▼
+┌─────────────────────────────────────────────────┐
+│ [REVIEW] plan-data-architect-review (PRE-LOAD)  │
+│   Defines target schema before code exists      │
+│   Artifact: .tower/reviews/architect-review-*   │
+│   Gate: gate_result must be APPROVE             │
+│   HARD GATE: hook blocks all file edits until   │
+│   both BA + Architect reviews have APPROVE      │
+└─────────────────────────────────────────────────┘
+         │
+         ▼
 ```
 
 ## Destination Decision
@@ -59,6 +69,12 @@ User asks to build a data app
 - Configure credentials via `setup-secrets`
 
 ## Build Phase
+
+> **HARD GATE (hook-enforced):** All Edit and Write calls to project files are blocked
+> until BA review AND Architect review both have `gate_result: APPROVE` in their
+> artifacts. This is not guidance — a PreToolUse hook will deny the tool call.
+> There is no bypass. Run `/plan-business-analyst-review` and
+> `/plan-data-architect-review` before any code changes, including initial scaffolding.
 
 ```
 [EXECUTE] init-tower-app
