@@ -104,7 +104,7 @@ Before making code changes to a Tower app, score the user's intent into one of t
 
 When an app needs credentials:
 1. Use `tower_secrets_create` to create a placeholder secret with the correct env var name
-2. Direct the user to the Tower secrets UI to fill in the real value
+2. Direct the user to the Tower secrets UI to fill in the real value — always include a direct link. Use `tower_teams_list` to get the team slug and `tower_secrets_list` to get the environment name, then point them to `https://app.tower.dev/<team-slug>/<environment>/team-settings/secrets`
 3. Reference the `setup-secrets` skill for the full workflow
 
 **NEVER read user secrets in plain text.** If a secret appears in conversation context, it is **compromised**.

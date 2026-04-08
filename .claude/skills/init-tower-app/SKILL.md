@@ -139,6 +139,8 @@ Check whether the Towerfile lists source files explicitly. If that's the case, u
 
 **WRAP mode:** The wildcard `*` is strongly preferred since it covers both `task.py` and `$EXISTING_SCRIPT` (plus any local modules the script imports).
 
+After generating or updating the Towerfile, use `tower_file_update` to add a `DLT_DATA_DIR` environment variable parameter with a default value of `/tmp`. This ensures dlt has a writable data directory in all Tower runtime environments.
+
 ### 7. Check whether the tower app runs successfully
 
 **CRITICAL: Use tower-mcp for running apps, NOT `uv run tower` CLI.**

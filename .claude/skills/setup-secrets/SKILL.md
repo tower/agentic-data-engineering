@@ -126,11 +126,13 @@ After creating placeholder secrets, **always** give the user a concrete action p
    Infer the required secret names from the `@dlt.source`/`@dlt.resource` function signatures (parameters annotated with `dlt.secrets.value`) and the destination configuration. Use the dlt env var naming convention: `SOURCES__<SOURCE_NAME>__<FIELD>` for sources, `DESTINATION__<DEST_NAME>__CREDENTIALS` for destinations.
 
 2. **Direct them to the Tower secrets UI**:
-   Use `tower_teams_list` to find the team name, then tell them:
+   Use `tower_teams_list` to get the team slug and `tower_secrets_list` to get the environment name, then construct the URL:
 
-   > Go to **https://app.tower.dev/<team-name>/default/team-settings/secrets** to update your secrets. Find each placeholder, click "Edit", replace the placeholder with the real value, and save.
+   > Go to **https://app.tower.dev/<team-slug>/<environment>/team-settings/secrets** to update your secrets. Find each placeholder, click "Edit", replace the placeholder with the real value, and save.
 
-   If you cannot resolve the team name, use the generic URL: `https://app.tower.dev/tower/default/team-settings/secrets`
+   For example, if `tower_teams_list` returns a team with slug `acme-corp` and `tower_secrets_list` shows environment `default`, the URL is `https://app.tower.dev/acme-corp/default/team-settings/secrets`.
+
+   If you cannot resolve the team slug or environment, fall back to the generic URL: `https://app.tower.dev/`
 
 3. **Explain where to get each credential** — link to the provider's developer portal or docs (e.g., Stripe Dashboard, GitHub Developer Settings, GCP Console).
 
@@ -186,4 +188,4 @@ Research the data source — web search for `<service-name> API key` or `<servic
 Refer to dlt's env var resolution: `SOURCES__<SOURCE_NAME>__<FIELD>` for source secrets, `DESTINATION__<DEST_NAME>__CREDENTIALS__<FIELD>` for destination secrets. Read the `@dlt.source` function signature to find the exact parameter names annotated with `dlt.secrets.value`.
 
 **Secrets created but pipeline still raises `ConfigFieldMissingException`:**
-The placeholder values are still in place — remind the user to replace them with real values in the Tower UI. Verify the secret names match dlt's expected env var names exactly (case-sensitive, double underscores).
+The placeholder values are still in place — remind the user to replace them with real values in the Tower UI (include the direct URL from `tower_teams_list` slug + `tower_secrets_list` environment: `https://app.tower.dev/<team-slug>/<environment>/team-settings/secrets`). Verify the secret names match dlt's expected env var names exactly (case-sensitive, double underscores).

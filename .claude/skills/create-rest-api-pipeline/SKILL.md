@@ -236,6 +236,10 @@ When using the default iceberg destination (tower-managed catalog), you **must**
 
 **ALWAYS Get Feedback** before you run the pipeline for a first time. Show summary of files that you changed or generated, then use the AskUserQuestion tool to confirm the user is ready to proceed.
 
+### 6c. Set DLT_DATA_DIR in Towerfile
+
+Use `tower_file_update` to ensure the Towerfile includes a `DLT_DATA_DIR` environment variable parameter with a default value of `/tmp`. This ensures dlt has a writable data directory in all Tower runtime environments. Use `tower_file_read` first to check if it is already set — skip if present.
+
 ### 7. Debug pipeline - first run
 
 When user requests to run pipeline **ALWAYS use `debug-pipeline`** to diagnose and guide credential setup
