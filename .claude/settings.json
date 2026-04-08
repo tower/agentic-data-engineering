@@ -1,0 +1,84 @@
+{
+  "autoMemoryEnabled": false,
+  "permissions": {
+    "allow": [
+      "Read",
+      "Glob",
+      "Grep",
+      "AskUserQuestion",
+      "mcp__tower-mcp__tower_file_generate",
+      "mcp__tower-mcp__tower_file_update",
+      "mcp__tower-mcp__tower_file_validate",
+      "mcp__tower-mcp__tower_file_read",
+      "mcp__tower-mcp__tower_file_add_parameter",
+      "mcp__tower-mcp__tower_run_local",
+      "mcp__tower-mcp__tower_apps_list",
+      "mcp__tower-mcp__tower_apps_show",
+      "mcp__tower-mcp__tower_apps_logs",
+      "mcp__tower-mcp__tower_apps_create",
+      "mcp__tower-mcp__tower_apps_delete",
+      "mcp__tower-mcp__tower_apps_cancel",
+      "mcp__tower-mcp__tower_secrets_list",
+      "mcp__tower-mcp__tower_secrets_create",
+      "mcp__tower-mcp__tower_secrets_delete",
+      "mcp__tower-mcp__tower_teams_list",
+      "mcp__tower-mcp__tower_teams_switch",
+      "mcp__tower-mcp__tower_schedules_list",
+      "mcp__tower-mcp__tower_schedules_create",
+      "mcp__tower-mcp__tower_schedules_update",
+      "mcp__tower-mcp__tower_schedules_delete",
+      "mcp__tower-mcp__tower_workflow_help"
+    ]
+  },
+  "enabledMcpjsonServers": [
+    "tower-mcp"
+  ],
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/block-secret-leaks.sh"
+          },
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/block-direct-execution.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__tower-mcp__tower_run_local",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/suggest-debug-mode.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "mcp__tower-mcp__tower_run_local",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/log-pipeline-run.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "mcp__tower-mcp__tower_run_local",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash \"$CLAUDE_PROJECT_DIR\"/.claude/hooks/log-pipeline-run.sh"
+          }
+        ]
+      }
+    ]
+  }
+}
