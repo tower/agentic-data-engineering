@@ -12,9 +12,8 @@ This repo closes these gaps and boost data engineering productivity along every 
 
 ## Prerequisites
 
-1. `uv` and `duckdb` installed on your machine (see [uv](https://docs.astral.sh/uv/getting-started/installation/), [duckdb](https://duckdb.org/install/?platform=macos&environment=cli&version=lts))
-2. Claude Code API Key or -subscription. You can create one [here](https://platform.claude.com/login?returnTo=%2F%3F), we'll use < 5$ worth of credits.
-3. The Tower CLI installed (`uv tool install tower` or `pip install tower`) and a Tower account [free signup](https://app.tower.dev/)
+1. `uv`, `duckdb`, and `claude code` installed on your machine (see [uv](https://docs.astral.sh/uv/getting-started/installation/), [duckdb](https://duckdb.org/install/?platform=macos&environment=cli&version=lts), [claude code](https://code.claude.com/docs/en/quickstart#step-1-install-claude-code))
+2. The Tower CLI installed (`uv tool install tower` or `pip install tower`) and a Tower account [free signup](https://app.tower.dev/)
 
 ## Getting started
 
@@ -22,6 +21,7 @@ We're putting ourselves in the shoes of a data engineer: Our goal is to build on
 
 1. Clone this repository `git clone https://github.com/tower/agentic-data-engineering.git`
 2. Install all dependencies: `uv sync`
+3. Set the Anthropic credentials in your shell `export ANTHROPIC_API_KEY=<api-key>`
 3. Head to [https://app.tower.dev/](https://app.tower.dev/) -> `Env` -> `Catalogs` and create a new Tower Catalog named `default`
 4. Ask claude to run the pipeline `claude "Run the pipeline"`. Some of the issues that we'll likely run into are:
 
@@ -30,9 +30,10 @@ We're putting ourselves in the shoes of a data engineer: Our goal is to build on
 - Lack of context slows down pipeline iterations/extensions
 
 6. `git checkout agentic-de` branch and tell claude to run the pipeline again. The `agentic-de` branch comes with a full-blown harness of skills, rules, and hooks for AI coding agents to actually make our lives as data engineers easier
-7. Start the tower mcp server `uvx tower mcp-server --transport sse --port 34567`
+7. Start the tower mcp server `uvx tower mcp-server --transport sse --port 34567` and check that claude can connect to it using the `/mcp` slash command
 8. Launch claude and prompt it to build on top of the pipeline to receive alersts in discord whenever a bug ticket gets filed.
 
 ## Alternative ideas for vibe-coded data apps
 
 - A bot that reviews code changes regularly, compares to docs, and suggests docks updates
+- A CS slackbot that answer questions based on our internal notion / linear and external docs

@@ -205,3 +205,6 @@ __marimo__/
 # macOS
 .DS_Store
 .venv
+
+# tower
+.tower
