@@ -32,6 +32,7 @@ Execute this preamble at the start of every invocation.
 ### 0. Read project context
 
 Read `.tower/project-profile.md` if it exists.
+
 - If present and fresh: use detected app name, app type, and review history. Skip redundant detection in Step 1.
 - If missing or stale: proceed with standard detection.
 
@@ -113,6 +114,7 @@ Does the schedule match data freshness needs AND source constraints?
 **SCORE 3:** Schedule is clearly wrong. Every-minute schedule for a pipeline that takes 10 minutes to run (overlapping runs). Or: daily schedule but the business needs real-time data. Or: no schedule at all for a pipeline that should run automatically.
 
 **Confidence calibration:**
+
 - 9-10: Verified schedule against source update frequency AND business freshness requirements
 - 7-8: Schedule seems reasonable; haven't verified source update frequency
 - 5-6: Schedule exists but appropriateness unclear
@@ -139,6 +141,7 @@ Are compute and API costs estimated and reasonable?
 **SCORE 3:** No cost awareness. Loading all 47 endpoints every hour without considering that it makes 10K API calls per run at $0.01 per call = $72K/year. Or: loading 100 columns per table when the analysis uses 10.
 
 **Cost estimation guide:**
+
 ```
 dlt pipelines:
   API cost: Count resources × pages per resource × runs per day
@@ -206,11 +209,13 @@ Can someone tell if the pipeline is healthy without looking at code?
 **PASS:** Brief documentation covers: what the app does, how to re-run on failure, how to troubleshoot common issues, who to contact.
 
 **CHECK:** This is a soft check — look for:
+
 - README.md in the project
 - Comments in task.py explaining the pipeline
 - Previous review artifacts that document the purpose
 
 **If missing:** Help create a minimal runbook:
+
 ```
 ## {App Name} Runbook
 
@@ -286,6 +291,7 @@ This dashboard is the final gate before `tower_deploy`.
 ## Artifact Format
 
 Create the directory if it doesn't exist, then write the artifact:
+
 ```bash
 mkdir -p .tower/reviews
 ```
@@ -295,30 +301,30 @@ Write to: `.tower/reviews/ops-review-{app}-{YYYYMMDD}.md`
 ```markdown
 ---
 persona: plan-ops-review
-app: {app-name}
+app: { app-name }
 mode: PRE_DEPLOY
-app_type: {dlt | dbt | asgi | python}
-date: {ISO 8601}
-gate_result: {APPROVE | BLOCK | OVERRIDE}
-commit: {short git hash}
+app_type: { dlt | dbt | asgi | python }
+date: { ISO 8601 }
+gate_result: { APPROVE | BLOCK | OVERRIDE }
+commit: { short git hash }
 ---
 
 ## Scored Dimensions
 
-| # | Dimension | Score | Confidence | Rationale |
-|---|-----------|-------|------------|-----------|
-| 1 | Schedule appropriateness | {0-10} | {1-10} | {one line} |
-| 2 | Failure recovery | {0-10} | {1-10} | {one line} |
-| 3 | Cost awareness | {0-10} | {1-10} | {one line} |
-| 4 | Monitoring | {0-10} | {1-10} | {one line} |
+| #   | Dimension                | Score  | Confidence | Rationale  |
+| --- | ------------------------ | ------ | ---------- | ---------- |
+| 1   | Schedule appropriateness | {0-10} | {1-10}     | {one line} |
+| 2   | Failure recovery         | {0-10} | {1-10}     | {one line} |
+| 3   | Cost awareness           | {0-10} | {1-10}     | {one line} |
+| 4   | Monitoring               | {0-10} | {1-10}     | {one line} |
 
 ## Pass/Fail Checks
 
-| Check | Result | Evidence |
-|-------|--------|----------|
+| Check                     | Result      | Evidence   |
+| ------------------------- | ----------- | ---------- |
 | PF-1: Towerfile resources | {PASS/FAIL} | {evidence} |
 | PF-2: Schedule configured | {PASS/FAIL} | {evidence} |
-| PF-3: Runbook exists | {PASS/FAIL} | {evidence} |
+| PF-3: Runbook exists      | {PASS/FAIL} | {evidence} |
 
 ## Review Readiness Dashboard
 

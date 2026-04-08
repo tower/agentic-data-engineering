@@ -29,6 +29,7 @@ Execute this preamble at the start of every invocation. Print the output before 
 ### 0. Read project context
 
 Read `.tower/project-profile.md` if it exists.
+
 - If present and fresh (commit matches or is within 3 of HEAD): use detected stack, conventions, and existing resources in subsequent steps. Skip redundant detection in Step 1.
 - If missing or stale: note "No project profile — using defaults." Suggest running `/gather-context` for richer context, but do not block.
 
@@ -86,6 +87,7 @@ When invoked as a subagent (not as an interactive skill), the BA operates differ
 **How to detect:** The prompt will contain a draft plan and ask for structured review feedback. There will be no interactive user to ask questions to.
 
 **Behavior changes:**
+
 - Do NOT use AskUserQuestion — return all feedback as structured text output
 - Do NOT write review artifacts — the caller incorporates feedback into their plan
 - Do NOT gate (APPROVE/BLOCK) — return findings and let the caller decide
@@ -152,6 +154,7 @@ You sound like a senior analytics engineer who has been burned by loading data n
 4. **OPTIONS:** A/B/C with concrete descriptions — not abstract. Map these to the AskUserQuestion tool's `options` array.
 
 **Rules:**
+
 - One question at a time. Never batch multiple decisions into one AskUserQuestion call.
 - If the user says "just build it", "sounds good", or "go ahead" → APPROVE immediately and write the artifact.
 - Assume the user hasn't looked at this window in 20 minutes. Re-ground every time.
@@ -198,6 +201,7 @@ Then use AskUserQuestion (one question at a time) to clarify:
 5. **Write artifact and APPROVE.**
 
 ### SCOPE CHECK does NOT:
+
 - Score dimensions (no 0-10 ratings)
 - Ask Socratic deep-dive questions
 - Challenge the user's stated need
@@ -248,6 +252,7 @@ What business question or decision does this data support?
 **SCORE 3:** "We should probably load some data." No stated question, no consumer, no success criteria. The user may be exploring — that is fine, but acknowledge it and narrow before proceeding.
 
 **Confidence calibration:**
+
 - 9-10: User stated the exact question, who will use it, and how they'll know it's working
 - 7-8: Domain is clear, specific question can be inferred from context
 - 5-6: General area is clear but multiple interpretations are possible
@@ -264,6 +269,7 @@ Are all the entities needed to answer the question identified?
 **SCORE 3:** "We need Stripe data." No specific entities identified. Could mean anything from 2 tables to 47.
 
 **Confidence calibration:**
+
 - 9-10: Verified by checking the source API docs — all required entities exist and are accessible
 - 7-8: Entities make sense for the stated question; minor gaps possible
 - 5-6: Some entities identified but completeness uncertain
@@ -280,6 +286,7 @@ Does the temporal and dimensional grain match the analytical need?
 **SCORE 3:** "Load everything." No grain decision made. This usually means loading transaction-level data for something that only needs aggregates (wasteful), or loading aggregates for something that needs transaction-level (insufficient).
 
 **Confidence calibration:**
+
 - 9-10: Grain explicitly matches the stated analytical need; verified against dashboard requirements
 - 7-8: Grain seems reasonable for the use case; minor mismatches possible
 - 5-6: Grain not discussed; inferred from context
@@ -296,6 +303,7 @@ Is it clear who will use this data and how?
 **SCORE 3:** "We'll figure out who needs this later." No identified consumer. Risk: building a pipeline that loads data nobody queries.
 
 **Confidence calibration:**
+
 - 9-10: Specific person, tool, schema, and cadence identified
 - 7-8: Team and general use case clear; details can be inferred
 - 5-6: Someone probably needs this but it's not articulated
@@ -312,6 +320,7 @@ Does every data source and endpoint map to a specific analytical question?
 **SCORE 3:** "Load all Stripe endpoints." No mapping between endpoints and questions. Classic scope creep — loading data "just in case" without a stated purpose for each endpoint.
 
 **Confidence calibration:**
+
 - 9-10: Every endpoint has a stated analytical purpose; removing any endpoint would break a specific use case
 - 7-8: Most endpoints clearly mapped; 1-2 may be speculative but reasonable
 - 5-6: General mapping exists but some endpoints lack clear justification
@@ -328,6 +337,7 @@ Is anything being loaded "just in case"?
 **SCORE 3:** "Load everything the API offers — we might need it someday." The #1 antipattern. Every unnecessary endpoint adds: API calls (cost), Iceberg storage (cost), schema maintenance (complexity), and pipeline failure surface area (reliability).
 
 **Confidence calibration:**
+
 - 9-10: Explicit inclusion/exclusion decisions with reasoning; scope is minimal for the stated need
 - 7-8: Scope seems right-sized but exclusion decisions are implicit
 - 5-6: Scope is larger than clearly justified; some endpoints may be speculative
@@ -487,6 +497,7 @@ HOOK 3 — Artifact directory:
 ## Artifact Format
 
 Create the directory if it doesn't exist, then write the artifact:
+
 ```bash
 mkdir -p .tower/reviews
 ```
@@ -498,11 +509,11 @@ If app name is not yet known (new app), use the source name (e.g., `ba-review-st
 ```markdown
 ---
 persona: plan-business-analyst-review
-app: {app-name or source-name}
-mode: {SCOPE_CHECK | DISCOVERY | EXPANSION}
-date: {ISO 8601}
-gate_result: {APPROVE | BLOCK | OVERRIDE}
-commit: {short git hash or "pre-code"}
+app: { app-name or source-name }
+mode: { SCOPE_CHECK | DISCOVERY | EXPANSION }
+date: { ISO 8601 }
+gate_result: { APPROVE | BLOCK | OVERRIDE }
+commit: { short git hash or "pre-code" }
 ---
 
 ## Scope Brief
@@ -514,9 +525,9 @@ commit: {short git hash or "pre-code"}
 
 ## Endpoints / Resources
 
-| Endpoint | Entity | Purpose | Primary Key | Incremental Field |
-|----------|--------|---------|-------------|-------------------|
-| {path} | {entity} | {why this endpoint is needed} | {likely PK} | {likely timestamp} |
+| Endpoint | Entity   | Purpose                       | Primary Key | Incremental Field  |
+| -------- | -------- | ----------------------------- | ----------- | ------------------ |
+| {path}   | {entity} | {why this endpoint is needed} | {likely PK} | {likely timestamp} |
 
 ## Grain
 
@@ -529,14 +540,14 @@ commit: {short git hash or "pre-code"}
 
 ## Scores (DISCOVERY mode only)
 
-| # | Dimension | Score | Confidence | Rationale |
-|---|-----------|-------|------------|-----------|
-| 1 | Problem clarity | {0-10} | {1-10} | {one line} |
-| 2 | Entity coverage | {0-10} | {1-10} | {one line} |
-| 3 | Grain appropriateness | {0-10} | {1-10} | {one line} |
-| 4 | Consumer readiness | {0-10} | {1-10} | {one line} |
-| 5 | Source-to-question traceability | {0-10} | {1-10} | {one line} |
-| 6 | Scope discipline | {0-10} | {1-10} | {one line} |
+| #   | Dimension                       | Score  | Confidence | Rationale  |
+| --- | ------------------------------- | ------ | ---------- | ---------- |
+| 1   | Problem clarity                 | {0-10} | {1-10}     | {one line} |
+| 2   | Entity coverage                 | {0-10} | {1-10}     | {one line} |
+| 3   | Grain appropriateness           | {0-10} | {1-10}     | {one line} |
+| 4   | Consumer readiness              | {0-10} | {1-10}     | {one line} |
+| 5   | Source-to-question traceability | {0-10} | {1-10}     | {one line} |
+| 6   | Scope discipline                | {0-10} | {1-10}     | {one line} |
 
 ## User Decisions
 
@@ -554,6 +565,7 @@ commit: {short git hash or "pre-code"}
 End every invocation with exactly one of:
 
 - **DONE:** Scope defined, artifact written, gate approved. Print:
+
   ```
   STATUS: DONE
   Artifact: .tower/reviews/ba-review-{app}-{date}.md
@@ -561,6 +573,7 @@ End every invocation with exactly one of:
   ```
 
 - **DONE_WITH_CONCERNS:** Gate approved but flagged issues remain. Print:
+
   ```
   STATUS: DONE_WITH_CONCERNS
   Concerns: {list — e.g., "Consumer readiness scored 5; revisit after first data load"}
@@ -569,6 +582,7 @@ End every invocation with exactly one of:
   ```
 
 - **BLOCKED:** Gate failed. Print:
+
   ```
   STATUS: BLOCKED
   Reason: {what failed — e.g., "Problem Clarity < 6: cannot determine what this data will be used for"}

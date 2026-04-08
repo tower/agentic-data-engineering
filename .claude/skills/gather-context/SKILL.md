@@ -58,32 +58,32 @@ If the Towerfile exists, also read it via `tower_file_read` MCP tool for app nam
 
 **Classify the app type:**
 
-| Signals | App Type |
-|---------|----------|
-| task.py contains `RESTAPIConfig`, `rest_api_resources`, `dlt.pipeline`, or `dlt.source` | `dlt` |
-| task.py contains `dbtRunner` or `dbt_project.yml` exists | `dbt` |
-| task.py contains `Starlette`, `FastAPI`, `litestar`, or `uvicorn` | `asgi` |
-| task.py exists but no dlt/dbt/asgi signals | `python` |
-| No task.py or main.py | `empty` (no app yet) |
+| Signals                                                                                 | App Type             |
+| --------------------------------------------------------------------------------------- | -------------------- |
+| task.py contains `RESTAPIConfig`, `rest_api_resources`, `dlt.pipeline`, or `dlt.source` | `dlt`                |
+| task.py contains `dbtRunner` or `dbt_project.yml` exists                                | `dbt`                |
+| task.py contains `Starlette`, `FastAPI`, `litestar`, or `uvicorn`                       | `asgi`               |
+| task.py exists but no dlt/dbt/asgi signals                                              | `python`             |
+| No task.py or main.py                                                                   | `empty` (no app yet) |
 
 **Classify the source type** (dlt apps only):
 
-| Signals | Source Type |
-|---------|-------------|
-| `RESTAPIConfig` or `rest_api_resources` in task.py | `rest_api` |
-| `sql_database` in task.py or imports | `sql_database` |
-| `filesystem` in task.py or imports | `filesystem` |
-| Other dlt source | Read import statements to identify |
+| Signals                                            | Source Type                        |
+| -------------------------------------------------- | ---------------------------------- |
+| `RESTAPIConfig` or `rest_api_resources` in task.py | `rest_api`                         |
+| `sql_database` in task.py or imports               | `sql_database`                     |
+| `filesystem` in task.py or imports                 | `filesystem`                       |
+| Other dlt source                                   | Read import statements to identify |
 
 **Classify the destination:**
 
-| Signals | Destination |
-|---------|-------------|
-| `.dlt/config.toml` has `[destination.iceberg]` | `iceberg` |
-| `.dlt/config.toml` has `[destination.postgres]` | `postgres` |
-| `.dlt/config.toml` has `[destination.bigquery]` | `bigquery` |
-| `.dlt/config.toml` has `[destination.duckdb]` | `duckdb` |
-| No destination config | `unknown` (or not yet configured) |
+| Signals                                         | Destination                       |
+| ----------------------------------------------- | --------------------------------- |
+| `.dlt/config.toml` has `[destination.iceberg]`  | `iceberg`                         |
+| `.dlt/config.toml` has `[destination.postgres]` | `postgres`                        |
+| `.dlt/config.toml` has `[destination.bigquery]` | `bigquery`                        |
+| `.dlt/config.toml` has `[destination.duckdb]`   | `duckdb`                          |
+| No destination config                           | `unknown` (or not yet configured) |
 
 ### 2. Convention learning
 
@@ -139,6 +139,7 @@ Read models/ directory structure and extract:
 ```
 
 If app type is `asgi`, read task.py for:
+
 ```
 1. Framework: Starlette, FastAPI, or litestar
 2. Route definitions and patterns
@@ -148,6 +149,7 @@ If app type is `asgi`, read task.py for:
 ```
 
 If app type is `python`, read task.py for:
+
 ```
 1. Tower SDK usage patterns
 2. Output patterns (Iceberg writes, file output, database writes, stdout)
@@ -188,43 +190,43 @@ Write the profile with this structure:
 
 ```markdown
 ---
-generated: {ISO 8601 timestamp}
-commit: {short git hash}
+generated: { ISO 8601 timestamp }
+commit: { short git hash }
 ---
 
 ## Stack Detection
 
-| Signal | Value | Source |
-|--------|-------|--------|
-| Package manager | {uv / pip / none} | {evidence} |
-| Python version | {version} | pyproject.toml |
-| App type | {dlt / dbt / asgi / python / empty} | {evidence} |
-| Source type | {rest_api / sql_database / filesystem / n/a} | {evidence} |
-| Destination | {iceberg / postgres / bigquery / duckdb / unknown} | {evidence} |
-| Tower app name | {name} | Towerfile |
-| Has Towerfile | {yes / no} | file check |
-| Has .dlt/ config | {yes / no} | file check |
-| Has dbt_project | {yes / no} | file check |
+| Signal           | Value                                              | Source         |
+| ---------------- | -------------------------------------------------- | -------------- |
+| Package manager  | {uv / pip / none}                                  | {evidence}     |
+| Python version   | {version}                                          | pyproject.toml |
+| App type         | {dlt / dbt / asgi / python / empty}                | {evidence}     |
+| Source type      | {rest_api / sql_database / filesystem / n/a}       | {evidence}     |
+| Destination      | {iceberg / postgres / bigquery / duckdb / unknown} | {evidence}     |
+| Tower app name   | {name}                                             | Towerfile      |
+| Has Towerfile    | {yes / no}                                         | file check     |
+| Has .dlt/ config | {yes / no}                                         | file check     |
+| Has dbt_project  | {yes / no}                                         | file check     |
 
 ## Conventions Observed
 
-| Convention | Value | Source |
-|------------|-------|--------|
-| Source function naming | {pattern with example} | task.py:{line} |
-| Resource naming | {pattern} | task.py:{line} |
-| Auth pattern | {type} | task.py:{line} |
-| Import style | {pattern} | task.py:{line} |
-| Write disposition | {replace / merge / append} | task.py:{line} |
-| Incremental strategy | {field + initial_value, or "none"} | task.py:{line} |
-| Env var bridging | {pattern, or "standard iceberg"} | task.py:{line} |
-| Pagination | {explicit type / auto-detected} | task.py:{line} |
-| Pipeline name | {name} | task.py:{line} |
+| Convention             | Value                              | Source         |
+| ---------------------- | ---------------------------------- | -------------- |
+| Source function naming | {pattern with example}             | task.py:{line} |
+| Resource naming        | {pattern}                          | task.py:{line} |
+| Auth pattern           | {type}                             | task.py:{line} |
+| Import style           | {pattern}                          | task.py:{line} |
+| Write disposition      | {replace / merge / append}         | task.py:{line} |
+| Incremental strategy   | {field + initial_value, or "none"} | task.py:{line} |
+| Env var bridging       | {pattern, or "standard iceberg"}   | task.py:{line} |
+| Pagination             | {explicit type / auto-detected}    | task.py:{line} |
+| Pipeline name          | {name}                             | task.py:{line} |
 
 ## Existing Resources
 
-| Resource | Endpoint | Write Disposition | Primary Key | Incremental Field |
-|----------|----------|-------------------|-------------|-------------------|
-| {name} | {path} | {merge/replace/append} | {key} | {field or "none"} |
+| Resource | Endpoint | Write Disposition      | Primary Key | Incremental Field |
+| -------- | -------- | ---------------------- | ----------- | ----------------- |
+| {name}   | {path}   | {merge/replace/append} | {key}       | {field or "none"} |
 
 ## Dependencies
 
@@ -232,9 +234,9 @@ commit: {short git hash}
 
 ## Review History
 
-| Review | Date | Gate | Mode | Artifact |
-|--------|------|------|------|----------|
-| {persona} | {date} | {result} | {mode} | {path} |
+| Review    | Date   | Gate     | Mode   | Artifact |
+| --------- | ------ | -------- | ------ | -------- |
+| {persona} | {date} | {result} | {mode} | {path}   |
 ```
 
 For `empty` app type (no task.py), write a minimal profile with just the stack detection table and note "No app code found — project not yet initialized."
@@ -248,6 +250,7 @@ If `AGENTS.md` exists in the repo root, update the fenced conventions section:
 
 ```markdown
 <!-- tower-conventions-start -->
+
 ## Project Conventions (auto-detected)
 
 - **App type:** {dlt REST API pipeline / dbt project / ASGI app / Python script}
@@ -267,14 +270,15 @@ If `AGENTS.md` does not exist, skip this step (don't create it — that's a sepa
 
 Report one of these status codes when the skill finishes:
 
-| Status | Meaning |
-|---|---|
-| **DONE** | Profile written to `.tower/project-profile.md`, conventions detected |
+| Status                 | Meaning                                                                                 |
+| ---------------------- | --------------------------------------------------------------------------------------- |
+| **DONE**               | Profile written to `.tower/project-profile.md`, conventions detected                    |
 | **DONE_WITH_CONCERNS** | Profile written but some detection was uncertain (e.g., ambiguous app type, no task.py) |
-| **BLOCKED** | Cannot detect anything — no Python project files found |
-| **NEEDS_CONTEXT** | Ambiguous signals — user must clarify (e.g., multiple entry points, mixed app types) |
+| **BLOCKED**            | Cannot detect anything — no Python project files found                                  |
+| **NEEDS_CONTEXT**      | Ambiguous signals — user must clarify (e.g., multiple entry points, mixed app types)    |
 
 Print:
+
 ```
 STATUS: {status}
 Artifact: .tower/project-profile.md

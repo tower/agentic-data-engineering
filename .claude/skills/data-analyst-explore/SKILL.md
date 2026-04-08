@@ -26,6 +26,7 @@ Execute this preamble at the start of every invocation.
 ### 0. Read project context
 
 Read `.tower/project-profile.md` if it exists.
+
 - If present and fresh: use detected pipeline name, app type, and existing resources. Skip redundant detection in Step 1.
 - If missing or stale: proceed with standard detection.
 
@@ -157,9 +158,11 @@ Automated profiling after a successful data load. This absorbs the `validate-dat
 ### Flow
 
 1. **Export schema:**
+
    ```bash
    uv run dlt --non-interactive pipeline <name> schema --format mermaid 2>&1
    ```
+
    Present the mermaid diagram.
 
 2. **Assess schema quality** (from validate-data):
@@ -176,6 +179,7 @@ Automated profiling after a successful data load. This absorbs the `validate-dat
    - Min/max for numeric fields (sanity check)
 
 4. **Present profiling summary:**
+
    ```
    ## Data Profile
 
@@ -223,9 +227,11 @@ Automated profiling after a successful data load. This absorbs the `validate-dat
 ### Workspace Dashboard
 
 Tell the user they can also run:
+
 ```bash
 uv run dlt pipeline <name> show
 ```
+
 This opens a browser with interactive table schemas, row counts, and sample data.
 
 ---
@@ -319,6 +325,7 @@ HOOK 2 — Pipeline trace available:
 ## Artifact Format
 
 Create the directory if it doesn't exist, then write the artifact:
+
 ```bash
 mkdir -p .tower/reviews
 ```
@@ -328,28 +335,28 @@ Write to: `.tower/reviews/analyst-profile-{app}-{YYYYMMDD}.md`
 ```markdown
 ---
 persona: data-analyst-explore
-app: {app-name}
-mode: {PROFILE | VALIDATE}
-app_type: {dlt | dbt | asgi | python}
-date: {ISO 8601}
-gate_result: {APPROVE | CONCERNS | BLOCK}
-commit: {short git hash}
+app: { app-name }
+mode: { PROFILE | VALIDATE }
+app_type: { dlt | dbt | asgi | python }
+date: { ISO 8601 }
+gate_result: { APPROVE | CONCERNS | BLOCK }
+commit: { short git hash }
 ---
 
 ## Data Profile
 
 | Table | Rows | Columns | Null Rate | Date Range |
-|-------|------|---------|-----------|------------|
+| ----- | ---- | ------- | --------- | ---------- |
 
 ## Scored Dimensions
 
-| # | Dimension | Score | Confidence | Rationale |
-|---|-----------|-------|------------|-----------|
-| 1 | Completeness | {0-10} | {1-10} | {one line} |
-| 2 | Freshness | {0-10} | {1-10} | {one line} |
-| 3 | Consistency | {0-10} | {1-10} | {one line} |
-| 4 | Queryability | {0-10} | {1-10} | {one line} |
-| 5 | Discoverability | {0-10} | {1-10} | {one line} |
+| #   | Dimension       | Score  | Confidence | Rationale  |
+| --- | --------------- | ------ | ---------- | ---------- |
+| 1   | Completeness    | {0-10} | {1-10}     | {one line} |
+| 2   | Freshness       | {0-10} | {1-10}     | {one line} |
+| 3   | Consistency     | {0-10} | {1-10}     | {one line} |
+| 4   | Queryability    | {0-10} | {1-10}     | {one line} |
+| 5   | Discoverability | {0-10} | {1-10}     | {one line} |
 
 ## Findings
 

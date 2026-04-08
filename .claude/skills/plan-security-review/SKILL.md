@@ -28,6 +28,7 @@ Execute this preamble at the start of every invocation.
 ### 0. Read project context
 
 Read `.tower/project-profile.md` if it exists.
+
 - If present and fresh: use detected app type, env var bridging pattern, and secret conventions. Skip redundant detection in Step 1.
 - If missing or stale: proceed with standard detection.
 
@@ -103,6 +104,7 @@ One finding = one AskUserQuestion call. Hard fails first.
 **PASS:** All secrets use Tower secrets (`tower_secrets_create`). No secrets in files or code.
 
 **FAIL indicators:**
+
 ```bash
 # secrets.toml must not exist
 test -f .dlt/secrets.toml && echo "FAIL: .dlt/secrets.toml exists"
@@ -124,6 +126,7 @@ grep -n "dlt.secrets.value" task.py 2>/dev/null || echo "WARNING: No dlt.secrets
 **PASS:** No code paths that could print, log, or expose secret values.
 
 **FAIL indicators:**
+
 ```bash
 # print/log near credential variables
 grep -rn 'print.*secret\|print.*token\|print.*password\|print.*api_key\|print.*credential' task.py main.py 2>/dev/null
@@ -141,6 +144,7 @@ grep -rn 'print.*os.environ\|print.*environ\|pprint.*environ' task.py main.py 2>
 **PASS:** Tower-managed Iceberg credentials (`PYICEBERG_CATALOG__DEFAULT__*`) are NOT duplicated as Tower secrets.
 
 **CHECK:**
+
 ```bash
 # These should NOT be in tower_secrets_list:
 # PYICEBERG_CATALOG__DEFAULT__URI
@@ -148,6 +152,7 @@ grep -rn 'print.*os.environ\|print.*environ\|pprint.*environ' task.py main.py 2>
 # PYICEBERG_CATALOG__DEFAULT__WAREHOUSE
 # PYICEBERG_CATALOG__DEFAULT__SCOPE
 ```
+
 Use `tower_secrets_list` MCP tool. If any `PYICEBERG_CATALOG` secrets found → FAIL with explanation that these are auto-injected by Tower runtime.
 
 ### PF-4: Least Privilege
@@ -155,12 +160,14 @@ Use `tower_secrets_list` MCP tool. If any `PYICEBERG_CATALOG` secrets found → 
 **PASS:** API tokens have minimum required scopes for the operation.
 
 **CHECK:** This is partially automated, partially manual:
+
 ```bash
 # Check for admin/write tokens where read-only would suffice
 grep -n "scope\|permission\|role" task.py .dlt/config.toml 2>/dev/null
 ```
 
 For common sources:
+
 - **GitHub:** `repo` scope is too broad for read-only data ingestion; `read:org` + `read:user` suffice
 - **Stripe:** Secret key (`sk_`) has full access; consider restricted keys with read-only permissions
 - **Slack:** `admin` scope for reading messages is excessive; `channels:history` suffices
@@ -172,6 +179,7 @@ Present as informational finding. Ask the user: "Does your {source} token have t
 **PASS:** Every secret in `tower_secrets_list` is referenced by the pipeline code.
 
 **CHECK:**
+
 1. Get secret names from `tower_secrets_list`
 2. For each secret, check if it's referenced in `task.py`, `.dlt/config.toml`, or environment variable resolution
 3. Secrets not referenced by any code → stale, recommend deletion
@@ -191,17 +199,20 @@ Is personal data identified and handled responsibly?
 **SCORE 3:** Source clearly contains PII (email addresses, names, phone numbers, addresses) and there is no acknowledgment, no handling strategy, and no masking. PII flows directly into Iceberg without controls.
 
 **When to score strictly:** Sources known to contain PII:
+
 - Stripe (customer name, email, address, last4 of card)
 - GitHub (user email, name, location)
 - Salesforce/CRM (contact details, company info)
 - Any user-facing API (profiles, accounts)
 
 **When to score leniently:** Sources unlikely to contain PII:
+
 - Stock market data (ticker prices, volumes)
 - Infrastructure metrics (server stats, logs without user context)
 - Public datasets
 
 **Confidence calibration:**
+
 - 9-10: Reviewed loaded data for PII columns; handling strategy verified in code
 - 7-8: Source type suggests PII presence; code reviewed for handling
 - 5-6: PII status uncertain; haven't inspected actual data
@@ -275,6 +286,7 @@ Credential compromise response.
    - How long was it exposed?
 
 3. **Immediate actions checklist:**
+
    ```
    [ ] Rotate the compromised credential at the source (provider dashboard)
    [ ] Update the Tower secret with the new credential (tower_secrets_create)
@@ -321,6 +333,7 @@ Credential compromise response.
 ## Artifact Format
 
 Create the directory if it doesn't exist, then write the artifact:
+
 ```bash
 mkdir -p .tower/reviews
 ```
@@ -330,30 +343,30 @@ Write to: `.tower/reviews/security-review-{app}-{mode}-{YYYYMMDD}.md`
 ```markdown
 ---
 persona: plan-security-review
-app: {app-name}
-mode: {AUDIT | INCIDENT}
-app_type: {dlt | dbt | asgi | python}
-date: {ISO 8601}
-gate_result: {APPROVE | BLOCK | OVERRIDE}
-commit: {short git hash}
+app: { app-name }
+mode: { AUDIT | INCIDENT }
+app_type: { dlt | dbt | asgi | python }
+date: { ISO 8601 }
+gate_result: { APPROVE | BLOCK | OVERRIDE }
+commit: { short git hash }
 ---
 
 ## Pass/Fail Checks
 
-| Check | Result | Evidence |
-|-------|--------|----------|
-| PF-1: Credential isolation | {PASS/FAIL} | {evidence} |
-| PF-2: No secret leakage | {PASS/FAIL} | {evidence} |
-| PF-3: Iceberg creds separate | {PASS/FAIL} | {evidence} |
-| PF-4: Least privilege | {PASS/FAIL/INFO} | {evidence} |
-| PF-5: No stale secrets | {PASS/FAIL} | {evidence} |
+| Check                        | Result           | Evidence   |
+| ---------------------------- | ---------------- | ---------- |
+| PF-1: Credential isolation   | {PASS/FAIL}      | {evidence} |
+| PF-2: No secret leakage      | {PASS/FAIL}      | {evidence} |
+| PF-3: Iceberg creds separate | {PASS/FAIL}      | {evidence} |
+| PF-4: Least privilege        | {PASS/FAIL/INFO} | {evidence} |
+| PF-5: No stale secrets       | {PASS/FAIL}      | {evidence} |
 
 ## Scored Dimensions
 
-| # | Dimension | Score | Confidence | Rationale |
-|---|-----------|-------|------------|-----------|
-| 1 | PII awareness | {0-10} | {1-10} | {one line} |
-| 2 | Secret rotation readiness | {0-10} | {1-10} | {one line} |
+| #   | Dimension                 | Score  | Confidence | Rationale  |
+| --- | ------------------------- | ------ | ---------- | ---------- |
+| 1   | PII awareness             | {0-10} | {1-10}     | {one line} |
+| 2   | Secret rotation readiness | {0-10} | {1-10}     | {one line} |
 
 ## Findings
 

@@ -29,6 +29,7 @@ Create a Tower app. Two modes: SCAFFOLD (greenfield) or WRAP (existing Python co
 ### 0. Read project context and detect mode
 
 Read `.tower/project-profile.md` if it exists.
+
 - If present and shows app_type is NOT `empty` (Towerfile already exists): the app is already initialized. Report DONE immediately: "Tower app already exists ({app_name}). No scaffolding needed."
 - If present and shows app_type is `empty`: check for existing scripts (below).
 - If missing: check for existing scripts (below).
@@ -42,6 +43,7 @@ find . -name "*.py" -not -path "./.venv/*" -not -path "./__pycache__/*" -not -na
 ```
 
 If matches are found:
+
 - **WRAP mode**: Identify the primary script. Preference order:
   1. Files with `dlt.pipeline` (dlt pipeline)
   2. Files with `Starlette` or `FastAPI` or `app = ` (ASGI app)
@@ -52,6 +54,7 @@ If matches are found:
 - Classify the app type: `dlt` (has dlt imports), `asgi` (has Starlette/FastAPI), or `python` (everything else).
 
 If no matches are found:
+
 - **SCAFFOLD mode**: Proceed with the existing hello-world flow.
 
 ### 1. Snapshot current folder
@@ -59,11 +62,13 @@ If no matches are found:
 Run `ls -la` to see the current state before scaffolding.
 
 ### 2. Check or create uv project
+
 Check if `uv` is available. If not, install it with `pip install uv` and then activate the venv.
 If `uv` is available, and the folder snapshot shows that we're already in an active uv project, continue.
 If the folder is still not a uv project, initialize it with `uv init` and activate the venv.
 
 ### 3. Install the latest version tower
+
 Run `uv add tower>=0.1.0` to install the latest version of Tower. This ensures we have the latest features and bug fixes.
 
 ### 4. Create `task.py` entry point (mode-dependent)
@@ -71,6 +76,7 @@ Run `uv add tower>=0.1.0` to install the latest version of Tower. This ensures w
 **SCAFFOLD mode** (no existing scripts):
 
 Create a `task.py` file with the following content:
+
 ```python
 import tower
 if __name__ == "__main__":
@@ -120,11 +126,13 @@ if __name__ == "__main__":
 Replace `$MODULE` and `$EXISTING_SCRIPT` with actual values (e.g., `from pipeline import main`).
 
 ### 5. Check the Tower team
+
 **CRITICAL: ALWAYS use tower-mcp server for ALL Tower operations.**
 
 Check whether the user is logged into Tower and whether they are on the right team. Use the `tower_teams_list` tool from the tower-mcp server to list teams and confirm the right one is active. If the user wants to switch teams, they can do so with `tower_teams_switch` MCP tool.
 
 ### 6. Use the tower-mcp server to create & verify a Towerfile
+
 **CRITICAL: Use tower-mcp, NOT CLI commands.**
 
 Check whether the Towerfile lists source files explicitly. If that's the case, use the `tower_file_update` tool from tower-mcp server to replace the list with a wildcard (`*`), then use `tower_file_validate` to verify the file.
@@ -132,6 +140,7 @@ Check whether the Towerfile lists source files explicitly. If that's the case, u
 **WRAP mode:** The wildcard `*` is strongly preferred since it covers both `task.py` and `$EXISTING_SCRIPT` (plus any local modules the script imports).
 
 ### 7. Check whether the tower app runs successfully
+
 **CRITICAL: Use tower-mcp for running apps, NOT `uv run tower` CLI.**
 
 Run the Tower app locally using the `tower_run_local` tool from the tower-mcp server. Use `tower_apps_logs` to inspect output if needed.
@@ -143,12 +152,12 @@ Run the Tower app locally using the `tower_run_local` tool from the tower-mcp se
 
 Report one of these status codes when the skill finishes:
 
-| Status | Meaning |
-|---|---|
-| **DONE** | App created. SCAFFOLD: `tower_run_local` prints Tower version. WRAP: `tower_run_local` executes existing script/serves ASGI app (or fails on credentials only). |
-| **DONE_WITH_CONCERNS** | App runs but with warnings (e.g. outdated Tower version, team mismatch, missing credentials in WRAP mode) |
-| **BLOCKED** | Cannot proceed — `uv` not available and install failed, or Tower login/team check failed |
-| **NEEDS_CONTEXT** | User must clarify team selection or project directory before continuing |
+| Status                 | Meaning                                                                                                                                                         |
+| ---------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **DONE**               | App created. SCAFFOLD: `tower_run_local` prints Tower version. WRAP: `tower_run_local` executes existing script/serves ASGI app (or fails on credentials only). |
+| **DONE_WITH_CONCERNS** | App runs but with warnings (e.g. outdated Tower version, team mismatch, missing credentials in WRAP mode)                                                       |
+| **BLOCKED**            | Cannot proceed — `uv` not available and install failed, or Tower login/team check failed                                                                        |
+| **NEEDS_CONTEXT**      | User must clarify team selection or project directory before continuing                                                                                         |
 
 ## Error Recovery
 

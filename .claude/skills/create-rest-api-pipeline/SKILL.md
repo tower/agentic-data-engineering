@@ -26,7 +26,6 @@ Create the simplest working dlt pipeline running as a Tower app — single endpo
 **Requires a `dlt init` command as the argument** (e.g. `dlt init shopify_store iceberg`).
 If you don't have one yet, run `find-source` and `find-destination` first to identify the right source and destination
 
-
 The argument is the full `dlt init` command to run (e.g. `dlt init shopify_store iceberg` or `dlt init sql_database postgres`).
 
 ## Steps
@@ -34,10 +33,12 @@ The argument is the full `dlt init` command to run (e.g. `dlt init shopify_store
 ### 0. Read project context
 
 Read `.tower/project-profile.md` if it exists.
+
 - If present and fresh: use detected conventions for naming, auth, env var bridging, and write disposition in subsequent steps. If existing resources are listed, you are ADDING to an existing pipeline — do not replace `task.py`, add new resources to the existing config.
 - If missing or stale: do minimal inline detection — check if `task.py` already exists and has pipeline code. If it does, read it to learn conventions before making changes.
 
 **Convention-following rules when profile exists:**
+
 - **Source function naming:** Follow the existing `@dlt.source` function name pattern
 - **Resource naming:** Follow the existing pluralization and casing convention
 - **Auth pattern:** Reuse the existing auth type unless the new source requires a different one
@@ -50,11 +51,13 @@ Read `.tower/project-profile.md` if it exists.
 Run `ls -la` to see the current state before scaffolding.
 
 ### 2. Check or create uv project
+
 Check if `uv` is available. If not, install it with `pip install uv` and then activate the venv.
 If `uv` is available, and the folder snapshot shows that we're already in an active uv project, continue.
 If the folder is still not a uv project, initialize it with `uv init` and activate the venv.
 
 ### 3. Install the latest version of dlt and dlthub
+
 Run `uv add dlt>=1.23.0 dlthub>=0.9.1` to install the latest versions of dlt and dlthub. This ensures we have the latest features and bug fixes. Make sure to add any extra dependencies that the `dlt init` command might require for the users source and destination (e.g. `dlt[postgres]` if the destination is postgres).
 
 ### 4. Run dlt init
@@ -64,12 +67,15 @@ Run `uv add dlt>=1.23.0 dlthub>=0.9.1` to install the latest versions of dlt and
 Run the provided `dlt init` command with `--non-interactive` in the active venv. Depending on the source type, this creates:
 
 **Core source** (`dlt init rest_api iceberg`):
+
 - `rest_api_pipeline.py` (or similar) — full working example with RESTAPIConfig, pagination, incremental loading
 
 **Generic fallback** (`dlt init <unknown_name> iceberg`):
+
 - `<name>_pipeline.py` — basic intro template (less useful, prefer core sources)
 
 **Shared files** (created on first init, updated on subsequent runs):
+
 - `.dlt/secrets.toml` — credentials template
 - `.dlt/config.toml` — pipeline config
 - `requirements.txt` — Python dependencies
@@ -80,6 +86,7 @@ Run `ls -la` again to confirm what was created, then rename the generated pipeli
 ### 3. Read generated files
 
 Read the following files to understand the scaffold:
+
 - `task.py` — the pipeline code template
 - `<source>-docs.yaml` — API endpoint scaffold with auth, endpoints, params, data selectors (if present)
 - `.dlt/config.toml` — source/destination config ie. `api_url`
@@ -93,14 +100,17 @@ Delete the auto-generated `.dlt/secrets.toml` — **we use Tower secrets exclusi
 Do these in parallel:
 
 **Read essential dlt docs upfront:**
+
 - REST API source (config, auth, pagination, processing_steps): `https://dlthub.com/docs/dlt-ecosystem/verified-sources/rest_api/basic.md`
 - Source & resource decorators, parameters: `https://dlthub.com/docs/general-usage/source.md` and `https://dlthub.com/docs/general-usage/resource.md`
 
 **Web search the data source:**
+
 - Confirm the scaffold is accurate, learn about auth method, available endpoints
 - How does the user get API keys/tokens for this service
 
 **Read additional docs as needed in later steps:**
+
 - How dlt works (extract → normalize → load): `https://dlthub.com/docs/reference/explainers/how-dlt-works.md`
 - CLI reference (trace, load-package, schema): `https://dlthub.com/docs/reference/command-line-interface.md`
 - File formats: `https://dlthub.com/docs/dlt-ecosystem/file-formats/`
@@ -131,6 +141,7 @@ Edit `task.py` using information from the scaffold, API research, and dlt docs:
 - **Runtime params** (plain defaults): date ranges, filters, granularity — give sensible defaults so the pipeline works out of the box
 
 Users will call the source both ways:
+
 ```python
 pipeline.run(my_source())  # auto-inject from TOML
 pipeline.run(my_source(starting_at="2025-01-01T00:00:00Z", bucket_width="1h"))  # explicit
@@ -161,7 +172,6 @@ def my_source(
     }
     yield from rest_api_resources(config)
 ```
-
 
 ### 6b. Set up config and secrets
 
@@ -197,6 +207,7 @@ When using the default iceberg destination (tower-managed catalog), you **must**
    catalog_type = "rest"
    ```
 3. Bridge PyIceberg env vars to dlt's naming convention in `task.py` (before `dlt.pipeline()` call):
+
    ```python
    import os
    import json
@@ -226,6 +237,7 @@ When using the default iceberg destination (tower-managed catalog), you **must**
 **ALWAYS Get Feedback** before you run the pipeline for a first time. Show summary of files that you changed or generated, then use the AskUserQuestion tool to confirm the user is ready to proceed.
 
 ### 7. Debug pipeline - first run
+
 When user requests to run pipeline **ALWAYS use `debug-pipeline`** to diagnose and guide credential setup
 **NEVER add more endpoints** before that - keep it simple
 
@@ -233,12 +245,12 @@ When user requests to run pipeline **ALWAYS use `debug-pipeline`** to diagnose a
 
 Report one of these status codes when the skill finishes:
 
-| Status | Meaning |
-|---|---|
-| **DONE** | Pipeline scaffolded, `uv run python -c "import task"` passes, `tower_file_validate` passes |
+| Status                 | Meaning                                                                                                             |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| **DONE**               | Pipeline scaffolded, `uv run python -c "import task"` passes, `tower_file_validate` passes                          |
 | **DONE_WITH_CONCERNS** | Pipeline scaffolded but with warnings (e.g. scaffold diverged from expected structure, destination config untested) |
-| **BLOCKED** | `dlt init` failed and cannot be resolved, or import check fails after multiple fix attempts |
-| **NEEDS_CONTEXT** | User must confirm endpoint selection, auth method, or destination config before continuing |
+| **BLOCKED**            | `dlt init` failed and cannot be resolved, or import check fails after multiple fix attempts                         |
+| **NEEDS_CONTEXT**      | User must confirm endpoint selection, auth method, or destination config before continuing                          |
 
 ## Error Recovery
 

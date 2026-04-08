@@ -35,6 +35,7 @@ Execute this preamble at the start of every invocation. Print the output before 
 ### 0. Read project context
 
 Read `.tower/project-profile.md` if it exists.
+
 - If present and fresh: use detected stack, conventions, and resources. Skip redundant detection in Step 1 (app type, destination, etc. are already known). Judge code against the project's OWN conventions, not just defaults.
 - If missing or stale: proceed with standard detection. Suggest running `/gather-context` for richer context.
 
@@ -156,6 +157,7 @@ You sound like a staff data engineer reviewing a colleague's PR. You name specif
 4. **OPTIONS:** A/B/C with concrete descriptions. Map these to the AskUserQuestion tool's `options` array.
 
 **Rules:**
+
 - One finding = one AskUserQuestion call. Never batch.
 - If user says "just do it" or "apply your recommendation" → proceed without further questions.
 - Assume the user hasn't looked at this window in 20 minutes. Re-ground every time.
@@ -170,9 +172,11 @@ You sound like a staff data engineer reviewing a colleague's PR. You name specif
 How does the app handle loading data over time?
 
 **SCORE 10 (dlt):**
+
 ```python
 dlt.sources.incremental("updated_at", initial_value="2024-01-01T00:00:00Z")
 ```
+
 with `write_disposition="merge"`, `primary_key="id"`. Initial backfill loads all history from `initial_value`. Subsequent runs load only records updated since last cursor value. Cursor advances correctly — verified via `uv run dlt pipeline <name> info` showing `last_value` progressing between runs.
 
 **SCORE 10 (dbt):** `dbt build` is inherently incremental when models use `{{ config(materialized='incremental') }}` with `unique_key` and `is_incremental()` guard. Full refresh available via `--full-refresh` flag or Tower parameter `DBT_FULL_REFRESH=true`.
@@ -186,6 +190,7 @@ with `write_disposition="merge"`, `primary_key="id"`. Initial backfill loads all
 **SCORE 3:** `write_disposition="replace"` with no incremental marker. Full reload every run. Works but wastes API calls, compute, and risks data loss during the replace window.
 
 **Confidence calibration:**
+
 - 9-10: Verified by reading code AND checking pipeline state for advancing cursor
 - 7-8: Code review confirms config is correct; no state verification yet
 - 5-6: Pattern match suggests it should work but edge cases unclear
@@ -208,6 +213,7 @@ How does the app handle transient failures?
 **SCORE 3:** No retry configuration. A single 429 or 5xx kills the entire pipeline run. Or: `write_disposition="replace"` means a failure mid-run leaves the table empty until the next successful run. Or: errors are caught and silently ignored (`except: pass`).
 
 **Confidence calibration:**
+
 - 9-10: Verified by reading retry config AND checking tower_apps_logs for recovery behavior
 - 7-8: Config exists and looks correct; no production failure history to verify against
 - 5-6: Defaults are in place but explicit config is missing
@@ -230,6 +236,7 @@ Does the app avoid unnecessary work?
 **SCORE 3:** `.add_limit(N)` on parent does NOT limit child fetches — each of N parent items triggers unbounded child requests. Or: full table rebuilds on every run when incremental would suffice. Or: loading 100+ columns when the analysis needs 10.
 
 **Confidence calibration:**
+
 - 9-10: Verified by reading code AND checking tower_apps_logs for resource usage
 - 7-8: Code review shows efficient patterns; no production metrics to verify
 - 5-6: Some efficiency concerns but unclear if they matter at current scale
@@ -252,6 +259,7 @@ Can you diagnose problems from the app's output?
 **SCORE 3:** Pipeline name is "pipeline". No progress logging. Errors produce a stack trace but no business context ("what was it trying to do when it failed?"). `tower_apps_logs` output is useless for diagnosis.
 
 **Confidence calibration:**
+
 - 9-10: Verified by checking actual tower_apps_logs output from a recent run
 - 7-8: Code review shows logging patterns; actual output not verified
 - 5-6: Some logging exists but completeness uncertain
@@ -274,12 +282,14 @@ Are there tests that catch data quality issues before they reach consumers?
 **SCORE 3:** No tests. dlt: `pipeline.run()` result is not inspected — pipeline "succeeds" even if it loads 0 rows or wrong data. dbt: `dbt run` used instead of `dbt build` (skips tests entirely). Python: script writes whatever it gets to Iceberg with no validation.
 
 **Confidence calibration:**
+
 - 9-10: Verified by reading test definitions AND checking that tests actually run (in dbt: `dbt build` not `dbt run`; in dlt: post-run assertions in code)
 - 7-8: Test files/config exist; not verified that they run in production
 - 5-6: Some test infrastructure but coverage is unclear
 - 3-4: No test definitions found; uncertain if testing happens elsewhere
 
 **dbt-specific checks (from GitLab Trusted Data Framework):**
+
 ```bash
 # Check if schema.yml exists for models
 find . -name "schema.yml" -o -name "*.yml" | xargs grep -l "models:" 2>/dev/null
@@ -303,17 +313,20 @@ grep -n "dbt run\b\|dbt build" task.py 2>/dev/null
 **PASS:** App uses Tower-managed Iceberg as destination (not local DuckDB or filesystem). Runs via `tower_run_local` (dev) or `tower_deploy` (prod). Towerfile exists and is valid.
 
 **FAIL indicators:**
+
 - `destination="duckdb"` or `destination="filesystem"` in production code
 - No Towerfile present
 - Evidence of running via `python task.py` instead of Tower
 
 **Check commands:**
+
 ```bash
 grep -n "destination.*duckdb\|destination.*filesystem" task.py .dlt/config.toml 2>/dev/null
 test -f Towerfile && echo "PASS: Towerfile exists" || echo "FAIL: No Towerfile"
 ```
 
 **dlt-specific:** Verify Iceberg env var bridging is present:
+
 ```bash
 grep -n "DESTINATION__ICEBERG__CREDENTIALS" task.py
 # Must find the bridging block that maps PYICEBERG_CATALOG__DEFAULT__* → DESTINATION__ICEBERG__CREDENTIALS__*
@@ -324,6 +337,7 @@ grep -n "DESTINATION__ICEBERG__CREDENTIALS" task.py
 **PASS:** All credentials use Tower secrets (`tower_secrets_create`). No secrets in `.dlt/secrets.toml`, `.env`, `profiles.yml`, or hardcoded in code.
 
 **FAIL indicators:**
+
 ```bash
 test -f .dlt/secrets.toml && echo "FAIL: .dlt/secrets.toml exists — should be deleted" || echo "PASS"
 test -f .env && echo "FAIL: .env file exists — use Tower secrets" || echo "PASS"
@@ -332,6 +346,7 @@ grep -rn "print.*secret\|print.*token\|print.*password\|print.*api_key" task.py 
 ```
 
 **dbt-specific:** `profiles.yml` must NOT be checked into git. Should be generated at runtime from `DBT_PROFILE_YAML` Tower secret:
+
 ```bash
 test -f profiles.yml && echo "FAIL: profiles.yml should not be in repo" || echo "PASS"
 git ls-files profiles.yml 2>/dev/null | grep -q profiles.yml && echo "FAIL: profiles.yml is tracked by git" || echo "PASS"
@@ -342,6 +357,7 @@ git ls-files profiles.yml 2>/dev/null | grep -q profiles.yml && echo "FAIL: prof
 **PASS:** Every dlt resource with an API endpoint has an explicit `paginator` configuration. No auto-detected pagination in production.
 
 **FAIL indicators:**
+
 ```bash
 # Check if any resource configs lack a paginator key
 grep -c "paginator" task.py
@@ -349,6 +365,7 @@ grep -c "paginator" task.py
 ```
 
 **Why this matters:** Auto-detected pagination can:
+
 - Loop forever (OffsetPaginator guesses wrong stop condition)
 - Silently return partial data (stops too early)
 - Break when the API changes response format
@@ -358,6 +375,7 @@ grep -c "paginator" task.py
 **PASS:** Resources that update over time use `write_disposition="merge"` with `primary_key` set. `replace` is only used for lookup/reference tables that are small and static.
 
 **FAIL indicators:**
+
 ```bash
 grep -n "write_disposition.*replace" task.py
 # If found for non-lookup resources → FAIL
@@ -373,6 +391,7 @@ grep -n "primary_key" task.py
 **PASS:** No dev-only code remains in the production pipeline.
 
 **Check commands:**
+
 ```bash
 grep -rn "dev_mode" task.py && echo "FAIL: dev_mode still present" || echo "PASS"
 grep -rn "\.add_limit\|add_limit(" task.py && echo "FAIL: add_limit still present" || echo "PASS"
@@ -404,12 +423,14 @@ Read-only. Score dimensions, run pass/fail checks, present findings. Do not modi
    - `.tower/reviews/ba-review-*.md` (if exists) — for context on scope decisions
 
 2. **Run verification hooks:**
+
    ```bash
    # Import check — catches syntax errors without a full run
    uv run python -c "import task" 2>&1 || echo "IMPORT FAILED"
    ```
 
 3. **Run pass/fail checks.** Execute the check commands for PF-1 through PF-4 (skip PF-5 and PF-6 — those are PROD READINESS only). Present results:
+
    ```
    ## Pass/Fail Checks
    | Check | Result | Evidence |
@@ -421,6 +442,7 @@ Read-only. Score dimensions, run pass/fail checks, present findings. Do not modi
    ```
 
 4. **Score 4 gradient dimensions.** Read code carefully, then present scores:
+
    ```
    ## Scored Dimensions
    | # | Dimension | Score | Confidence | Rationale |
@@ -433,6 +455,7 @@ Read-only. Score dimensions, run pass/fail checks, present findings. Do not modi
    ```
 
 5. **Present findings as prioritized list.** One finding at a time, starting with highest severity:
+
    ```
    ### Finding 1 of 4 [P1] (confidence: 9/10)
 
@@ -449,6 +472,7 @@ Read-only. Score dimensions, run pass/fail checks, present findings. Do not modi
 6. **After all findings presented:** Write artifact and set status.
 
 ### DEV REVIEW does NOT:
+
 - Modify any files
 - Remove dev_mode or add_limit (that's PROD READINESS)
 - Check PF-5 (dev scaffolding) or PF-6 (Towerfile validation)
@@ -472,6 +496,7 @@ This mode absorbs `adjust-endpoint`. It reviews AND makes changes to prepare the
 4. **For each FAIL or score < 5, guide the human through the fix:**
 
    **Dev scaffolding removal (PF-5):**
+
    ```
    Found dev scaffolding to remove:
 
@@ -486,6 +511,7 @@ This mode absorbs `adjust-endpoint`. It reviews AND makes changes to prepare the
    ```
 
    **Pagination fix:**
+
    ```
    task.py:67 — `transactions` resource needs an explicit paginator.
 
@@ -501,6 +527,7 @@ This mode absorbs `adjust-endpoint`. It reviews AND makes changes to prepare the
    ```
 
    **Incremental loading setup:**
+
    ```
    task.py:55 — `charges` resource uses write_disposition="replace".
 
@@ -516,6 +543,7 @@ This mode absorbs `adjust-endpoint`. It reviews AND makes changes to prepare the
    ```
 
 5. **After all changes:** Run verification hooks:
+
    ```bash
    uv run python -c "import task"  # import check
    tower_file_validate              # Towerfile still valid
@@ -537,6 +565,7 @@ Root cause analysis when `tower_apps_logs` shows failures.
 ### Flow
 
 1. **Gather evidence:**
+
    ```bash
    # Read recent Tower logs
    tower_apps_logs   # via MCP tool
@@ -553,14 +582,14 @@ Root cause analysis when `tower_apps_logs` shows failures.
 
 2. **Classify the error:**
 
-   | Error type | Indicators | Typical fix |
-   |---|---|---|
-   | Config/secrets missing | `ConfigFieldMissingException`, 401 | setup-secrets or env var bridging |
-   | Pagination loop | Repeated same URL, pipeline hangs | Explicit paginator (see FP-1) |
-   | Rate limiting | 429 responses, exponential delays | Add rate limit config |
-   | Schema mismatch | Iceberg write failure, type error | Column hints or processing_steps |
-   | Source API change | New fields, changed response format | Update data_selector or schema |
-   | Destination error | Iceberg catalog error, connection refused | Check PYICEBERG env vars |
+   | Error type             | Indicators                                | Typical fix                       |
+   | ---------------------- | ----------------------------------------- | --------------------------------- |
+   | Config/secrets missing | `ConfigFieldMissingException`, 401        | setup-secrets or env var bridging |
+   | Pagination loop        | Repeated same URL, pipeline hangs         | Explicit paginator (see FP-1)     |
+   | Rate limiting          | 429 responses, exponential delays         | Add rate limit config             |
+   | Schema mismatch        | Iceberg write failure, type error         | Column hints or processing_steps  |
+   | Source API change      | New fields, changed response format       | Update data_selector or schema    |
+   | Destination error      | Iceberg catalog error, connection refused | Check PYICEBERG env vars          |
 
 3. **Present diagnosis and recommended fix.** One finding at a time.
 
@@ -600,11 +629,13 @@ Performance review for working but slow/expensive apps.
 **SYMPTOM:** `tower_apps_logs` shows repeated HTTP requests to the same URL with incrementing offset. Pipeline runs indefinitely or until Tower kills it.
 
 **CAUSE:** Three common variants:
+
 1. `OffsetPaginator` without `stop_after_empty_page=True` — continues fetching empty pages forever
 2. `JSONResponseCursorPaginator` with `cursor_path` pointing to a field that always exists, even on empty pages (e.g., a wrapper `"meta"` object)
 3. `PageNumberPaginator` without `total_path` or `maximum_page` — no stop condition
 
 **CHECK:**
+
 ```bash
 grep -n "OffsetPaginator\|PageNumberPaginator\|auto" task.py
 grep -n "stop_after_empty_page" task.py
@@ -624,10 +655,12 @@ grep -n "cursor_path" task.py
 **CHECK:** Look for resources with `include_from_parent` or `resolve` config. Check if the child endpoint has an event-series nature (commits, runs, logs) vs. entity nature (users, orgs).
 
 **FIX:** For event-series children:
+
 - Add a date filter parameter to the child endpoint config (e.g., `"created": f">={seven_days_ago}"`)
 - Use the API's own filtering, not dlt's `add_limit()`
 
 For entity children:
+
 - `add_limit()` on the child is fine since entities don't accumulate unboundedly
 
 **SCORE IMPACT:** Resource Efficiency → 3
@@ -639,13 +672,16 @@ For entity children:
 **CAUSE:** dlt does NOT read `PYICEBERG_CATALOG__DEFAULT__*` directly. It uses `DESTINATION__ICEBERG__CREDENTIALS__*`. Manual bridging code in `task.py` is required.
 
 **CHECK:**
+
 ```bash
 grep -n "DESTINATION__ICEBERG__CREDENTIALS" task.py
 grep -n "PYICEBERG_CATALOG__DEFAULT" task.py
 ```
+
 Both must be present. If only `PYICEBERG` is found, bridging is missing.
 
 **FIX:** Add the env var bridging block before `dlt.pipeline()`:
+
 ```python
 import os, json
 _ENV_MAP = {
@@ -672,6 +708,7 @@ if props:
 **CAUSE:** `profiles.yml` is misconfigured — hardcoded credentials, wrong target, or missing from the project root.
 
 **CHECK:**
+
 ```bash
 # profiles.yml must exist in project root (NOT ~/.dbt/, NOT checked into git with real creds)
 test -f profiles.yml && echo "FOUND" || echo "MISSING"
@@ -695,6 +732,7 @@ grep -n "DBT_TARGET\|--target" task.py 2>/dev/null
 **4. Target selection via environment variable.** `task.py` reads `DBT_TARGET` and passes it as `--target` to dbt. Tower environments set `DBT_TARGET=prod` (or staging, etc.).
 
 **Reference profiles.yml template (Iceberg + Tower):**
+
 ```yaml
 # profiles.yml — checked into git, secrets via env_var()
 my_dbt_project:
@@ -722,6 +760,7 @@ my_dbt_project:
 ```
 
 **Key patterns:**
+
 - `DBT_ENV_SECRET_` prefix → dbt scrubs these from logs automatically
 - `local-dev` target has fallback defaults via `env_var('...', 'default')` — works without any env vars set
 - `prod` target has NO defaults — fails loudly if secrets are missing (correct behavior)
@@ -729,6 +768,7 @@ my_dbt_project:
 - `DBT_TARGET` env var selects the target; defaults to `local-dev` if not set
 
 **Reference task.py pattern:**
+
 ```python
 import os
 import tower
@@ -752,11 +792,13 @@ runner.invoke(["build", "--target", target, "--project-dir", "."])
 ```
 
 **Tower secrets to create** (via `tower_secrets_create` in the default environment):
+
 - `DBT_ENV_SECRET_CATALOG_URI` — Iceberg REST catalog endpoint
 - `DBT_ENV_SECRET_CATALOG_CREDENTIAL` — OAuth2 credentials (client_id:client_secret)
 - `DBT_ENV_SECRET_CATALOG_WAREHOUSE` — Warehouse name
 
 If a separate prod environment exists, also create `DBT_TARGET=prod` there:
+
 ```
 tower_secrets_create(name="DBT_TARGET", value="prod", environment="prod")
 ```
@@ -772,9 +814,11 @@ The default Tower environment always exists. Use `tower_secrets_list()` (no envi
 **CAUSE:** `write_disposition="replace"` deletes all existing data before loading. If the run partially fails or the API returns fewer records (e.g., due to a date filter), data is permanently lost.
 
 **CHECK:**
+
 ```bash
 grep -n "write_disposition.*replace" task.py
 ```
+
 If `replace` is found on a resource that contains historical/event data → problem.
 
 **FIX:** Switch to `write_disposition="merge"` with `primary_key` set. This upserts — new records are inserted, existing records are updated, no data is deleted.
@@ -786,14 +830,17 @@ If `replace` is found on a resource that contains historical/event data → prob
 **SYMPTOM:** Incremental loading is configured but every run loads the same data. No new records appear.
 
 **CAUSE:** The incremental cursor field (`updated_at`, `created_at`) does not advance between runs because:
+
 1. The field name in `dlt.sources.incremental()` doesn't match the actual API response field
 2. The API returns records in descending order and dlt takes the first value as the cursor
 3. The cursor value is a string that doesn't sort correctly (e.g., "2024-1-5" vs "2024-01-05")
 
 **CHECK:**
+
 ```bash
 uv run dlt --non-interactive pipeline -v <name> info 2>&1 | grep -A5 "last_value"
 ```
+
 Run twice. If `last_value` doesn't change, the cursor is stalling.
 
 **FIX:** Verify the cursor field name matches the API response. Add `row_order="asc"` if the API returns newest-first. Ensure the cursor value is ISO 8601 formatted.
@@ -807,22 +854,26 @@ Run twice. If `last_value` doesn't change, the cursor is stalling.
 Verbalize these scenarios during review — do not run them. Present as "What if?" questions:
 
 ### Universal (all app types)
+
 1. "What if Tower restarts this app mid-run? Is the load idempotent? Will it produce duplicates?"
 2. "What if the Iceberg catalog credentials rotate? Are they read from env vars at runtime (good) or cached at import time (bad)?"
 3. "What if this app runs successfully but loads 0 rows? Will anyone notice? Is there an alerting mechanism?"
 
 ### dlt-specific
+
 4. "What if the API returns an empty page? Does the paginator stop or loop?"
 5. "What if the API adds a new field to its response? Does dlt schema evolution handle it, or will it break?"
 6. "What if the cursor field (`updated_at`) has null values for some records? Will they be skipped permanently?"
 7. "What if two runs overlap (scheduled too close together)? Will they conflict on the Iceberg table?"
 
 ### asgi-specific
+
 8. "What if an external service this app depends on goes down? Do request handlers time out gracefully or hang?"
 9. "What if this app receives a burst of concurrent requests? Is there connection pooling? Rate limiting?"
 10. "What if Tower restarts this app? Does it start cleanly or depend on in-memory state from the previous run?"
 
 ### dbt-specific
+
 11. "What if a source table schema changes between dbt runs? Will models fail gracefully or silently produce wrong results?"
 
 ---
@@ -860,6 +911,7 @@ HOOK 6 — dbt compile (after dbt model changes):
 ## Artifact Format
 
 Create the directory if it doesn't exist, then write the artifact:
+
 ```bash
 mkdir -p .tower/reviews
 ```
@@ -869,34 +921,34 @@ Write to: `.tower/reviews/engineer-review-{app}-{mode}-{YYYYMMDD}.md`
 ```markdown
 ---
 persona: plan-data-engineer-review
-app: {app-name}
-mode: {DEV_REVIEW | PROD_READINESS | INCIDENT | OPTIMIZATION}
-app_type: {dlt | dbt | asgi | python}
-date: {ISO 8601}
-gate_result: {APPROVE | BLOCK | OVERRIDE}
-commit: {short git hash}
+app: { app-name }
+mode: { DEV_REVIEW | PROD_READINESS | INCIDENT | OPTIMIZATION }
+app_type: { dlt | dbt | asgi | python }
+date: { ISO 8601 }
+gate_result: { APPROVE | BLOCK | OVERRIDE }
+commit: { short git hash }
 ---
 
 ## Scored Dimensions
 
-| # | Dimension | Score | Confidence | Rationale |
-|---|-----------|-------|------------|-----------|
-| 1 | Incremental strategy | {0-10} | {1-10} | {one line} |
-| 2 | Error resilience | {0-10} | {1-10} | {one line} |
-| 3 | Resource efficiency | {0-10} | {1-10} | {one line} |
-| 4 | Observability | {0-10} | {1-10} | {one line} |
-| 5 | Test coverage | {0-10} | {1-10} | {one line} |
+| #   | Dimension            | Score  | Confidence | Rationale  |
+| --- | -------------------- | ------ | ---------- | ---------- |
+| 1   | Incremental strategy | {0-10} | {1-10}     | {one line} |
+| 2   | Error resilience     | {0-10} | {1-10}     | {one line} |
+| 3   | Resource efficiency  | {0-10} | {1-10}     | {one line} |
+| 4   | Observability        | {0-10} | {1-10}     | {one line} |
+| 5   | Test coverage        | {0-10} | {1-10}     | {one line} |
 
 ## Pass/Fail Checks
 
-| Check | Result | Evidence |
-|-------|--------|----------|
-| PF-1: Tower Integration | {PASS/FAIL} | {file:line or command output} |
-| PF-2: Secrets Management | {PASS/FAIL} | {evidence} |
-| PF-3: Pagination | {PASS/FAIL/N/A} | {evidence} |
-| PF-4: Write Disposition | {PASS/FAIL/N/A} | {evidence} |
-| PF-5: Dev Scaffolding | {PASS/FAIL/N/A} | {evidence} |
-| PF-6: Towerfile Valid | {PASS/FAIL} | {evidence} |
+| Check                    | Result          | Evidence                      |
+| ------------------------ | --------------- | ----------------------------- |
+| PF-1: Tower Integration  | {PASS/FAIL}     | {file:line or command output} |
+| PF-2: Secrets Management | {PASS/FAIL}     | {evidence}                    |
+| PF-3: Pagination         | {PASS/FAIL/N/A} | {evidence}                    |
+| PF-4: Write Disposition  | {PASS/FAIL/N/A} | {evidence}                    |
+| PF-5: Dev Scaffolding    | {PASS/FAIL/N/A} | {evidence}                    |
+| PF-6: Towerfile Valid    | {PASS/FAIL}     | {evidence}                    |
 
 ## Findings (priority order)
 
@@ -916,6 +968,7 @@ commit: {short git hash}
 ```
 
 Also append to `.tower/reviews/review-log.jsonl`:
+
 ```json
 {"persona":"plan-data-engineer-review","app":"{app}","mode":"{mode}","date":"{ISO}","gate":"{result}","commit":"{hash}","scores":{"incremental":{n},"error_resilience":{n},"resource_efficiency":{n},"observability":{n},"test_coverage":{n}},"pass_fail":{"tower_integration":"{P/F}","secrets":"{P/F}","pagination":"{P/F}","write_disposition":"{P/F}","dev_scaffolding":"{P/F}","towerfile":"{P/F}"}}
 ```
@@ -927,6 +980,7 @@ Also append to `.tower/reviews/review-log.jsonl`:
 End every invocation with exactly one of:
 
 - **DONE:** All checks passed or acceptable, gate approved.
+
   ```
   STATUS: DONE
   Artifact: .tower/reviews/engineer-review-{app}-{mode}-{date}.md
@@ -937,6 +991,7 @@ End every invocation with exactly one of:
   ```
 
 - **DONE_WITH_CONCERNS:** Gate approved but issues flagged.
+
   ```
   STATUS: DONE_WITH_CONCERNS
   Concerns: {list}
@@ -945,6 +1000,7 @@ End every invocation with exactly one of:
   ```
 
 - **BLOCKED:** Gate failed. Cannot proceed.
+
   ```
   STATUS: BLOCKED
   Failures: {list of FAIL checks or scores < 5}
