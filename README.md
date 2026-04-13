@@ -24,15 +24,8 @@ We're putting ourselves in the shoes of a data engineer: Our goal is to build on
 3. Install all dependencies: `uv sync`
 4. Set the Anthropic credentials in your shell `export ANTHROPIC_API_KEY=<api-key>`
 5. Head to [https://app.tower.dev/](https://app.tower.dev/) -> `Env` -> `Catalogs` and create a new Tower Catalog named `default`
-6. Ask claude to run the pipeline `claude "Run the pipeline"`. Some of the issues that we'll likely run into are:
-
-- Unauthenticated API calls lead to rate limits
-- Data in local DuckDB is ephemeral
-- Lack of context slows down pipeline iterations/extensions
-
-7. `git checkout agentic-de` branch and tell claude to run the pipeline again. The `agentic-de` branch comes with a full-blown harness of skills, rules, and hooks for AI coding agents to actually make our lives as data engineers easier
-8. Start the tower mcp server `uvx tower mcp-server --transport sse --port 34567` and check that claude can connect to it using the `/mcp` slash command
-9. From there, we will continue working together. Please also use the discord channel for questions.
+6. Start the tower mcp server `uvx tower mcp-server --transport sse --port 34567` and check that claude can connect to it using the `/mcp` slash command
+7. From there, we will continue working together. Please also use the discord channel for questions.
 
 ## Alternative ideas for vibe-coded data apps
 
