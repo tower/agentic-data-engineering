@@ -19,21 +19,15 @@ This repo closes these gaps and boost data engineering productivity along every 
 
 We're putting ourselves in the shoes of a data engineer: Our goal is to build on top of an existing data pipeline and create a small data app that notifies us when bugs are being reported through our ticketing system.
 
-1. Clone this repository `git clone https://github.com/tower/agentic-data-engineering.git`
-2. Install all dependencies: `uv sync`
-3. Set the Anthropic credentials in your shell `export ANTHROPIC_API_KEY=<api-key>`
-3. Head to [https://app.tower.dev/](https://app.tower.dev/) -> `Env` -> `Catalogs` and create a new Tower Catalog named `default`
-4. Ask claude to run the pipeline `claude "Run the pipeline"`. Some of the issues that we'll likely run into are:
-
-- Unauthenticated API calls lead to rate limits
-- Data in local DuckDB is ephemeral
-- Lack of context slows down pipeline iterations/extensions
-
-6. `git checkout agentic-de` branch and tell claude to run the pipeline again. The `agentic-de` branch comes with a full-blown harness of skills, rules, and hooks for AI coding agents to actually make our lives as data engineers easier
-7. Start the tower mcp server `uvx tower mcp-server --transport sse --port 34567` and check that claude can connect to it using the `/mcp` slash command
-8. Launch claude and prompt it to build on top of the pipeline to receive alersts in discord whenever a bug ticket gets filed.
+1. Join our Tutorial discord channel [https://discord.gg/HGe3RYZP](https://discord.gg/HGe3RYZP)
+2. Clone this repository `git clone https://github.com/tower/agentic-data-engineering.git`
+3. Install all dependencies: `uv sync`
+4. Set the Anthropic credentials in your shell `export ANTHROPIC_API_KEY=<api-key>`
+5. Head to [https://app.tower.dev/](https://app.tower.dev/) -> `Env` -> `Catalogs` and create a new Tower Catalog named `default`
+6. Start the tower mcp server `uvx tower mcp-server --transport sse --port 34567` and check that claude can connect to it using the `/mcp` slash command
+7. From there, we will continue working together. Please also use the discord channel for questions.
 
 ## Alternative ideas for vibe-coded data apps
 
-- A bot that reviews code changes regularly, compares to docs, and suggests docks updates
 - A CS slackbot that answer questions based on our internal notion / linear and external docs
+- Feel free to bring your own
